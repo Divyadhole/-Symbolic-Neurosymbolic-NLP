@@ -1,0 +1,174 @@
+﻿Wine Quality Prediction
+Author: Divya Liladhar Dhole
+Course: ISTA 555 - Applied Natural Language Processing
+Project 2 :Symbolic/Neurosymbolic NLP
+1. Introduction
+This project explores the application of various machine learning techniques to predict wine quality based on physicochemical properties. We utilise the Wine Quality dataset from the UCI Machine Learning Repository, which contains information about red wines. Our goal is to compare the performance of different models in predicting wine quality, providing insights into which approaches work best for this task.
+
+
+2. Data Preparation and Preprocessing
+We begin by downloading and preparing two datasets: the Iris dataset (for demonstration purposes) and the Wine Quality dataset (our main focus). Here's how we acquired and preprocessed the data:
+
+
+code
+```python
+import pandas as pd
+
+
+# Download the Wine Quality dataset
+url_wine = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
+wine_data = pd.read_csv(url_wine, sep=';')
+
+
+# Save the dataset to a CSV file
+wine_data.to_csv('wine_quality_dataset.csv', index=False)
+
+
+# Split the DataFrame into two parts
+split_index = len(wine_data) // 2
+data_part1 = wine_data.iloc[:split_index]
+data_part2 = wine_data.iloc[split_index:]
+
+
+# Save the two parts into separate CSV files
+data_part1.to_csv('wine_quality_part1.csv', index=False)
+data_part2.to_csv('wine_quality_part2.csv', index=False)
+```
+
+
+For our analysis, we focus on the first part of the split dataset:
+
+
+```python
+# Load one part of the dataset
+data_part = pd.read_csv('wine_quality_part1.csv')
+
+
+# Separate features and target
+X = data_part.drop('quality', axis=1)
+y = data_part['quality']
+# Encode the target variable
+from sklearn.preprocessing import LabelEncoder
+label_encoder = LabelEncoder()
+y_encoded = label_encoder.fit_transform(y)
+
+
+# Split the data into training and validation sets
+from sklearn.model_selection import train_test_split
+X_train, X_val, y_train, y_val = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+```
+3. Model Implementation
+
+
+We implemented four different machine learning models to predict wine quality:
+
+
+1. Neural Network (using Keras)
+2. Logistic Regression
+3. Random Forest
+4. Support Vector Machine (SVM)
+
+
+3.1 Neural Network
+
+
+```python
+from keras.models import Sequential
+from keras.layers import Dense
+
+
+model = Sequential()
+model.add(Dense(64, activation='relu', input_shape=(X_train.shape[1],)))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(6, activation='softmax'))
+
+
+model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+
+history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=32)
+```
+
+
+3.2 Logistic Regression
+
+
+```python
+from sklearn.linear_model import LogisticRegression
+
+
+logistic_model = LogisticRegression(max_iter=200)
+logistic_model.fit(X_train, y_train)
+```
+
+
+3.3 Random Forest
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+```
+
+
+3.4 Support Vector Machine
+
+
+```python
+from sklearn.svm import SVC
+
+
+svm_model = SVC(kernel='linear', random_state=42)
+svm_model.fit(X_train, y_train)
+```
+  
+4. Results and Analysis
+
+
+We evaluated each model's performance on the validation set:
+
+
+```python
+print("Model Accuracies:")
+print(f"Neural Network Accuracy: {nn_accuracy:.2f}")
+print(f"Logistic Regression Accuracy: {logistic_accuracy:.2f}")
+print(f"Random Forest Accuracy: {rf_accuracy:.2f}")
+print(f"SVM Accuracy: {svm_accuracy:.2f}")
+```
+
+
+The results of our model evaluations are as follows:
+
+
+Model Accuracies:
+- Neural Network Accuracy: 0.56
+- Logistic Regression Accuracy: 0.61
+- Random Forest Accuracy: 0.74
+- SVM Accuracy: 0.63
+
+
+
+
+
+
+5. Discussion and Conclusion
+
+
+This project demonstrates the application of various machine learning techniques to predict wine quality. We implemented and compared four different models: a neural network, logistic regression, random forest, and support vector machine.
+
+
+The performance of each model varied, with the Random Forest model achieving the highest accuracy of 0.74. This suggests that ensemble methods like Random Forest are particularly well-suited for this wine quality prediction task.
+
+
+Some observations from our analysis:
+1. Model Performances: The Random Forest model significantly outperformed the other models, with an accuracy of 0.74. This suggests that the wine quality prediction task benefits from the ensemble approach and decision tree-based methods. The SVM and Logistic Regression models performed moderately well, while the Neural Network had the lowest accuracy, possibly due to the limited dataset size or the need for further hyperparameter tuning.
+
+
+2. Dataset and Feature Importance: Given the strong performance of the Random Forest model, it's likely that there are complex, non-linear relationships between the wine's physicochemical properties and its quality. The Random Forest's ability to capture these relationships and handle feature interactions may explain its superior performance. It would be valuable to examine the feature importances derived from the Random Forest model to understand which properties are most predictive of wine quality.
+
+
+3. Unexpected Results and Challenges: The relatively poor performance of the Neural Network was unexpected, as neural networks often excel in complex prediction tasks. This could be due to several factors:
+   - Limited dataset size: Neural networks typically require large amounts of data to perform well.
+   - Lack of extensive hyperparameter tuning: The network architecture and training parameters might need further optimization.
+   - Nature of the problem: The wine quality prediction task might not require the level of complexity that neural networks offer, and simpler models like Random Forest might be more suitable.
